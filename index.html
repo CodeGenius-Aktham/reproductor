@@ -3,170 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bytes Auto-Radio Mixer</title>
+    <title>Bytes YouTube Mixer</title>
     <style>
         :root {
-            --bg-color: #0a0a0b;
-            --accent: #19510A; /* Bytes Green */
-            --glass: rgba(255, 255, 255, 0.03);
-            --text: #D7D7D6;
+            --yt-red: #FF0000;
+            --yt-black: #0f0f0f;
+            --yt-white: #ffffff;
+            --yt-grey: #272727;
+            --accent-green: #19510A;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--yt-black);
+            color: var(--yt-white);
+            font-family: "Roboto", Arial, sans-serif;
             margin: 0;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             min-height: 100vh;
         }
 
-        .mixer-card {
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 32px;
-            padding: 40px;
-            width: 400px;
-            text-align: center;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+        .header {
+            width: 100%;
+            padding: 15px 5%;
+            background: var(--yt-black);
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--yt-grey);
+            box-sizing: border-box;
         }
 
-        .input-group { margin-bottom: 20px; text-align: left; }
-        
-        label { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; color: #888; }
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            width: 95%;
+            max-width: 1400px;
+            margin-top: 20px;
+        }
 
+        /* Reproductor de YouTube */
+        .video-player-container {
+            background: #000;
+            aspect-ratio: 16 / 9;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--yt-grey);
+        }
+
+        /* Panel de Control Lateral */
+        .control-panel {
+            background: var(--yt-grey);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .timer-box {
+            background: #000;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid var(--accent-green);
+        }
+
+        .timer-label { font-size: 12px; color: #aaa; text-transform: uppercase; }
+        .timer-value { font-size: 32px; font-weight: bold; color: var(--accent-green); }
+
+        .input-group label { font-size: 14px; display: block; margin-bottom: 5px; color: #efefef; }
         input, textarea {
             width: 100%;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: #121212;
+            border: 1px solid #3f3f3f;
             color: white;
-            padding: 14px;
-            border-radius: 14px;
-            font-size: 14px;
-            outline: none;
+            padding: 12px;
+            border-radius: 8px;
             box-sizing: border-box;
         }
 
         button {
-            width: 100%;
-            padding: 16px;
-            border-radius: 14px;
-            border: none;
-            background: var(--accent);
+            background: var(--yt-red);
             color: white;
-            font-weight: 700;
+            border: none;
+            padding: 12px;
+            border-radius: 20px;
+            font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 10px;
+            transition: 0.2s;
         }
 
-        button:hover { filter: brightness(1.2); }
-        .btn-stop { background: #4a1010; margin-top: 20px; }
+        button:hover { filter: brightness(0.9); }
+        .btn-active { background: var(--accent-green) !important; }
 
-        #player { display: none; } /* Oculto para mantener estética */
-
-        .timer-display {
-            font-size: 11px;
-            margin-top: 15px;
-            color: var(--accent);
-            font-weight: bold;
+        @media (max-width: 900px) {
+            .main-container { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-<div class="mixer-card">
-    <h1 style="font-weight: 200; margin-bottom: 30px;">Bytes <span style="font-weight: 700;">Mixer</span></h1>
+<div class="header">
+    <div style="font-size: 20px; font-weight: bold; color: white;">
+        <span style="background: var(--yt-red); padding: 2px 6px; border-radius: 4px; margin-right: 5px;">Bytes</span> Mixer
+    </div>
+</div>
 
-    <div class="input-group">
-        <label>Género o Estilo de Música</label>
-        <input type="text" id="music-genre" placeholder="Ej: Deep House, Jazz, Lofi...">
+<div class="main-container">
+    <div class="video-player-container">
+        <div id="player"></div>
     </div>
 
-    <div class="input-group">
-        <label>Texto para el Locutor (Cada 1 min)</label>
-        <textarea id="tts-content" rows="4" placeholder="Escribe aquí el anuncio que se repetirá..."></textarea>
+    <div class="control-panel">
+        <div class="timer-box">
+            <div class="timer-label">Próximo anuncio en:</div>
+            <div class="timer-value" id="countdown">01:00</div>
+        </div>
+
+        <div class="input-group">
+            <label>1. Buscar Música (Género o Artista)</label>
+            <input type="text" id="genre-input" placeholder="Ej: Lofi Hip Hop">
+            <button style="width: 100%; margin-top: 8px;" onclick="loadNewRadio()">Cambiar Música</button>
+        </div>
+
+        <div class="input-group">
+            <label>2. Texto del Locutor</label>
+            <textarea id="tts-content" rows="4" placeholder="Lo que dirá la voz cada minuto..."></textarea>
+        </div>
+
+        <button id="master-btn" onclick="toggleSystem()" style="width: 100%;">INICIAR SISTEMA</button>
+        
+        <div id="status" style="font-size: 12px; color: #888; text-align: center; margin-top: 10px;">
+            Esperando acción...
+        </div>
     </div>
-
-    <button id="main-btn" onclick="startSystem()">Iniciar Radio y Locución</button>
-    <button class="btn-stop" id="stop-btn" onclick="stopSystem()" style="display:none;">Detener Todo</button>
-
-    <div id="player"></div>
-    <div class="timer-display" id="status">SISTEMA APAGADO</div>
 </div>
 
 <script>
     let player;
-    let ttsInterval;
+    let mainInterval;
+    let countdownInterval;
     let isRunning = false;
+    let timeLeft = 60;
 
-    // Cargar API de YouTube
+    // Cargar YouTube API
     var tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     var firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-    function startSystem() {
-        const genre = document.getElementById('music-genre').value;
-        if (!genre) return alert("Por favor ingresa un género musical.");
-        
-        isRunning = true;
-        document.getElementById('main-btn').style.display = 'none';
-        document.getElementById('stop-btn').style.display = 'block';
-        document.getElementById('status').innerText = "CONECTANDO CON YOUTUBE...";
-
-        // Crear/Reiniciar reproductor con búsqueda dinámica
-        if (player) player.destroy();
-        
+    function onYouTubeIframeAPIReady() {
         player = new YT.Player('player', {
-            height: '0',
-            width: '0',
-            playerVars: {
-                'listType': 'search',
-                'list': genre,
-                'autoplay': 1
-            },
-            events: {
-                'onReady': onPlayerReady,
-                'onStateChange': onPlayerStateChange
-            }
+            height: '100%',
+            width: '100%',
+            playerVars: { 'autoplay': 0, 'controls': 1 },
+            events: { 'onStateChange': onPlayerStateChange }
         });
     }
 
-    function onPlayerReady(event) {
-        event.target.playVideo();
-        document.getElementById('status').innerText = "RADIO ACTIVA - PRÓXIMO ANUNCIO EN 60s";
+    function loadNewRadio() {
+        const query = document.getElementById('genre-input').value;
+        if (!query) return alert("Escribe un género o canción");
         
-        // Iniciar ciclo de 1 minuto para el texto
-        ttsInterval = setInterval(runTTS, 60000);
+        player.loadPlaylist({
+            listType: 'search',
+            list: query,
+            index: 0,
+            suggestedQuality: 'large'
+        });
+        document.getElementById('status').innerText = "Cargando selección...";
     }
 
-    function onPlayerStateChange(event) {
-        // Si el video termina o hay error, la API de búsqueda salta al siguiente automáticamente
-        if (event.data === YT.PlayerState.ENDED) {
-            player.playVideo();
+    function toggleSystem() {
+        if (!isRunning) {
+            startSystem();
+        } else {
+            stopSystem();
         }
     }
 
-    function runTTS() {
+    function startSystem() {
+        isRunning = true;
+        timeLeft = 60;
+        document.getElementById('master-btn').innerText = "DETENER SISTEMA";
+        document.getElementById('master-btn').classList.add('btn-active');
+        
+        // Iniciar cuenta regresiva visual
+        startCountdown();
+        
+        // Programar la voz cada minuto
+        mainInterval = setInterval(runLocutor, 60000);
+        document.getElementById('status').innerText = "Sistema en vivo";
+    }
+
+    function startCountdown() {
+        clearInterval(countdownInterval);
+        countdownInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft < 0) timeLeft = 59;
+            
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            document.getElementById('countdown').innerText = 
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }, 1000);
+    }
+
+    function runLocutor() {
         const text = document.getElementById('tts-content').value;
-        if (!text || !isRunning) return;
+        if (!text) return;
 
         const msg = new SpeechSynthesisUtterance(text);
-        msg.lang = 'es-MX'; // Voz en español
-        msg.rate = 1.0;
-
-        // Bajar volumen de música
-        player.setVolume(15);
-        document.getElementById('status').innerText = "LOCUTOR HABLANDO...";
+        msg.lang = 'es-MX';
+        
+        // Ducking: Bajar volumen
+        player.setVolume(20);
+        document.getElementById('status').innerText = "Locutor hablando...";
 
         msg.onend = () => {
-            // Subir volumen al terminar
             player.setVolume(100);
-            document.getElementById('status').innerText = "MÚSICA EN CURSO - SIGUIENTE ANUNCIO EN 60s";
+            document.getElementById('status').innerText = "Música sonando...";
+            timeLeft = 60; // Reiniciar cuenta regresiva visual
         };
 
         window.speechSynthesis.speak(msg);
@@ -174,13 +233,19 @@
 
     function stopSystem() {
         isRunning = false;
-        clearInterval(ttsInterval);
-        if (player) player.stopVideo();
+        clearInterval(mainInterval);
+        clearInterval(countdownInterval);
         window.speechSynthesis.cancel();
         
-        document.getElementById('main-btn').style.display = 'block';
-        document.getElementById('stop-btn').style.display = 'none';
-        document.getElementById('status').innerText = "SISTEMA APAGADO";
+        document.getElementById('master-btn').innerText = "INICIAR SISTEMA";
+        document.getElementById('master-btn').classList.remove('btn-active');
+        document.getElementById('status').innerText = "Sistema detenido";
+    }
+
+    function onPlayerStateChange(event) {
+        if (event.data == YT.PlayerState.PLAYING) {
+            document.getElementById('status').innerText = "Reproduciendo...";
+        }
     }
 </script>
 
