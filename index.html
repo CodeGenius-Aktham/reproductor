@@ -3,259 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bytes Radio Streamer</title>
+    <title>Bytes Radio - YouTube Selection</title>
     <style>
         :root {
-            --bg: #0f0f0f;
-            --card: #1e1e1e;
-            --accent: #19510A;
+            --yt-black: #0f0f0f;
             --yt-red: #ff0000;
-            --text: #ffffff;
+            --yt-grey: #272727;
+            --bytes-green: #19510A;
+            --text-main: #f1f1f1;
         }
 
         body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Roboto', sans-serif;
+            background-color: var(--yt-black);
+            color: var(--text-main);
+            font-family: "Roboto", Arial, sans-serif;
             margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-bottom: 100px;
+            padding-bottom: 120px; /* Espacio para el panel fijo */
         }
 
-        /* Buscador Estilo YouTube */
-        .search-container {
-            width: 100%;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            background: var(--bg);
+        /* Barra de búsqueda superior */
+        .nav-bar {
             position: sticky;
             top: 0;
-            z-index: 100;
+            background: var(--yt-black);
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            z-index: 1000;
+            border-bottom: 1px solid var(--yt-grey);
         }
 
-        .search-bar {
+        .search-box {
             display: flex;
             width: 90%;
-            max-width: 600px;
+            max-width: 700px;
         }
 
-        input#search-input {
+        .search-box input {
             flex: 1;
             background: #121212;
             border: 1px solid #333;
             color: white;
             padding: 12px 20px;
             border-radius: 40px 0 0 40px;
+            font-size: 16px;
             outline: none;
         }
 
-        .search-btn {
+        .search-box button {
             background: #333;
-            border: none;
+            border: 1px solid #333;
             color: white;
-            padding: 0 20px;
+            padding: 0 25px;
             border-radius: 0 40px 40px 0;
             cursor: pointer;
         }
 
-        /* Resultados */
-        #results {
+        /* Cuadrícula de resultados tipo YouTube */
+        .results-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
-            width: 90%;
-            margin-top: 20px;
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
         }
 
-        .video-card {
-            background: var(--card);
+        .video-item {
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .video-item:hover { transform: scale(1.02); }
+
+        .thumbnail-container {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #222;
             border-radius: 12px;
             overflow: hidden;
-            cursor: pointer;
-            transition: 0.3s;
+            position: relative;
         }
 
-        .video-card:hover { transform: scale(1.03); }
-        .video-card img { width: 100%; display: block; }
-        .video-card p { padding: 10px; font-size: 14px; margin: 0; font-weight: 500; }
+        .thumbnail-container img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Reproductor y Controles Flotantes */
-        .player-footer {
+        .video-info {
+            display: flex;
+            margin-top: 12px;
+            gap: 12px;
+        }
+
+        .video-text h3 {
+            font-size: 15px;
+            margin: 0;
+            line-height: 1.4;
+            color: var(--text-main);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .video-text p { font-size: 13px; color: #aaa; margin: 4px 0 0 0; }
+
+        /* Panel de Control Inferior (Locutor y Mezcla) */
+        .footer-control {
             position: fixed;
             bottom: 0;
             width: 100%;
-            background: rgba(15, 15, 15, 0.95);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid #333;
-            padding: 15px;
+            background: rgba(15, 15, 15, 0.98);
+            border-top: 1px solid var(--yt-grey);
+            padding: 15px 30px;
             display: flex;
-            justify-content: space-around;
             align-items: center;
+            justify-content: space-between;
             box-sizing: border-box;
+            backdrop-filter: blur(10px);
         }
 
-        .locutor-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            width: 40%;
-        }
-
+        .locutor-input { width: 40%; }
+        
         textarea {
-            background: #222;
+            width: 100%;
+            background: #121212;
             border: 1px solid #444;
             color: white;
             border-radius: 8px;
-            padding: 8px;
+            padding: 10px;
+            font-size: 13px;
             resize: none;
-            font-size: 12px;
         }
 
-        .timer-circle {
-            width: 60px;
-            height: 60px;
-            border: 3px solid var(--accent);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        .status-circle {
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .timer-num {
+            font-size: 24px;
             font-weight: bold;
-            font-size: 14px;
+            color: var(--bytes-green);
         }
 
-        #main-player { display: none; } /* El video se reproduce pero no estorba */
+        #hidden-player { display: none; }
     </style>
 </head>
 <body>
 
-<div class="search-container">
-    <div class="search-bar">
-        <input type="text" id="search-input" placeholder="Buscar música similar en YouTube...">
-        <button class="search-btn" onclick="searchMusic()">🔍</button>
+<div class="nav-bar">
+    <div class="search-box">
+        <input type="text" id="query" placeholder="Busca una canción o artista...">
+        <button onclick="searchVideos()">Buscar</button>
     </div>
 </div>
 
-<div id="results">
-    <p style="text-align: center; grid-column: 1/-1; color: #888;">Busca una canción para empezar la radio...</p>
+<div class="results-grid" id="container">
+    <p style="text-align: center; grid-column: 1/-1; color: #888; font-size: 18px; margin-top: 50px;">
+        Busca arriba para ver las opciones de YouTube
+    </p>
 </div>
 
-<div class="player-footer">
-    <div id="main-player"></div>
-    
-    <div class="locutor-panel">
-        <label style="font-size: 10px; color: var(--accent); font-weight: bold;">LOCUTOR AUTOMÁTICO</label>
-        <textarea id="tts-text" rows="2" placeholder="Escribe el anuncio aquí..."></textarea>
+<div class="footer-control">
+    <div id="hidden-player"></div>
+
+    <div class="locutor-input">
+        <label style="font-size: 10px; color: var(--bytes-green); font-weight: bold; display: block; margin-bottom: 5px;">GUION DEL LOCUTOR IA</label>
+        <textarea id="tts-content" rows="2" placeholder="Escribe el anuncio de cada minuto..."></textarea>
     </div>
 
-    <div class="timer-circle" id="timer">01:00</div>
-    
-    <button id="master-switch" onclick="toggleRadio()" style="background: var(--yt-red); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer;">
-        ENCENDER RADIO
+    <div class="status-circle">
+        <div class="timer-num" id="timer">01:00</div>
+        <div style="font-size: 9px; color: #888;">PARA ANUNCIO</div>
+    </div>
+
+    <button id="master-btn" onclick="toggleSystem()" style="background: var(--yt-red); color: white; border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; cursor: pointer;">
+        INICIAR RADIO
     </button>
 </div>
 
 <script>
     let player;
-    let ttsInterval;
-    let timerInterval;
+    let isRunning = false;
+    let timerInt;
+    let ttsInt;
     let timeLeft = 60;
-    let radioActive = false;
 
-    // Cargar API de YouTube
+    // Cargar YouTube API
     var tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     var firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
     function onYouTubeIframeAPIReady() {
-        player = new YT.Player('main-player', {
-            height: '200',
-            width: '350',
-            playerVars: { 'autoplay': 0, 'controls': 1 },
+        player = new YT.Player('hidden-player', {
+            height: '0',
+            width: '0',
+            playerVars: { 'autoplay': 1, 'controls': 1 },
             events: { 'onStateChange': onPlayerStateChange }
         });
     }
 
-    // BUSCADOR REAL: Usa el feed de búsqueda de YouTube
-    function searchMusic() {
-        const query = document.getElementById('search-input').value;
-        if (!query) return;
+    // BUSCADOR VISUAL
+    async function searchVideos() {
+        const q = document.getElementById('query').value;
+        if(!q) return;
 
-        const resultsDiv = document.getElementById('results');
-        resultsDiv.innerHTML = "<p style='text-align: center; grid-column: 1/-1;'>Buscando en YouTube...</p>";
+        const container = document.getElementById('container');
+        container.innerHTML = "<p style='text-align: center; grid-column: 1/-1;'>Buscando en el catálogo de YouTube...</p>";
 
-        // Nuclear hack: Usamos listType search para llenar los resultados
-        // Nota: Por seguridad de IFrame, mostramos una lista basada en la búsqueda
+        // Usamos la API para "cuyear" la lista y extraer los datos de los resultados
         player.cuePlaylist({
             listType: 'search',
-            list: query
+            list: q
         });
 
-        // Esperar un momento a que la API cargue la lista y mostrarla
+        // Esperar a que la lista se cargue internamente
         setTimeout(() => {
-            const playlist = player.getPlaylist();
-            resultsDiv.innerHTML = "";
+            const list = player.getPlaylist();
+            container.innerHTML = "";
             
-            if (playlist) {
-                playlist.forEach((id, index) => {
+            if(list && list.length > 0) {
+                list.slice(0, 12).forEach((id, index) => {
                     const card = document.createElement('div');
-                    card.className = 'video-card';
-                    card.onclick = () => playThis(id);
+                    card.className = 'video-item';
+                    card.onclick = () => selectVideo(id);
                     card.innerHTML = `
-                        <img src="https://img.youtube.com/vi/${id}/mqdefault.jpg">
-                        <p>Resultado ${index + 1} (Haz clic para iniciar)</p>
+                        <div class="thumbnail-container">
+                            <img src="https://img.youtube.com/vi/${id}/hqdefault.jpg">
+                        </div>
+                        <div class="video-info">
+                            <div class="video-text">
+                                <h3>Resultado de búsqueda #${index + 1}</h3>
+                                <p>Toca para reproducir y empezar radio</p>
+                            </div>
+                        </div>
                     `;
-                    resultsDiv.appendChild(card);
+                    container.appendChild(card);
                 });
             }
         }, 1500);
     }
 
-    function playThis(id) {
+    function selectVideo(id) {
         player.loadVideoById(id);
-        if (!radioActive) toggleRadio();
-        // Al terminar este video, YouTube sugerirá automáticamente el siguiente
-        // porque activamos el modo "Relacionados".
+        if(!isRunning) toggleSystem();
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
-    function toggleRadio() {
-        radioActive = !radioActive;
-        const btn = document.getElementById('master-switch');
-
-        if (radioActive) {
-            btn.innerText = "APAGAR RADIO";
+    function toggleSystem() {
+        isRunning = !isRunning;
+        const btn = document.getElementById('master-btn');
+        
+        if(isRunning) {
+            btn.innerText = "DETENER RADIO";
             btn.style.background = "#333";
-            startCycles();
+            startLogic();
         } else {
-            btn.innerText = "ENCENDER RADIO";
+            btn.innerText = "INICIAR RADIO";
             btn.style.background = "var(--yt-red)";
-            stopCycles();
+            stopLogic();
         }
     }
 
-    function startCycles() {
-        clearInterval(ttsInterval);
-        clearInterval(timerInterval);
+    function startLogic() {
+        clearInterval(timerInt);
+        clearInterval(ttsInt);
         timeLeft = 60;
 
-        timerInterval = setInterval(() => {
+        timerInt = setInterval(() => {
             timeLeft--;
-            if (timeLeft < 0) timeLeft = 59;
-            const s = timeLeft < 10 ? '0' + timeLeft : timeLeft;
+            if(timeLeft < 0) timeLeft = 59;
+            const s = timeLeft < 10 ? '0'+timeLeft : timeLeft;
             document.getElementById('timer').innerText = `00:${s}`;
         }, 1000);
 
-        ttsInterval = setInterval(runTTS, 60000);
+        ttsInt = setInterval(runLocutor, 60000);
     }
 
-    function runTTS() {
-        const text = document.getElementById('tts-text').value;
-        if (!text) return;
+    function runLocutor() {
+        const txt = document.getElementById('tts-content').value;
+        if(!txt) return;
 
-        const msg = new SpeechSynthesisUtterance(text);
+        const msg = new SpeechSynthesisUtterance(txt);
         msg.lang = 'es-MX';
         
         player.setVolume(15);
@@ -266,18 +295,16 @@
         window.speechSynthesis.speak(msg);
     }
 
-    function stopCycles() {
-        clearInterval(ttsInterval);
-        clearInterval(timerInterval);
+    function stopLogic() {
+        clearInterval(timerInt);
+        clearInterval(ttsInt);
         player.stopVideo();
         window.speechSynthesis.cancel();
     }
 
     function onPlayerStateChange(event) {
-        // Modo Radio Infinita: Si el video termina, busca uno similar
+        // Algoritmo: Si termina un video, YouTube carga el siguiente sugerido
         if (event.data === YT.PlayerState.ENDED) {
-            // Este es el truco del algoritmo: cargamos música relacionada
-            // (La API lo hace por defecto si el video es parte de una búsqueda)
             player.playVideo();
         }
     }
