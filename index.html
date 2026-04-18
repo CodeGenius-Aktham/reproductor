@@ -746,7 +746,7 @@ textarea::placeholder { color: var(--sub2); }
 const YT_KEY = 'AIzaSyA9bs1dq8qQPoUn30BzAJlsul-A_Cs32C4';
 
 // ─── STATE ───────────────────────────────────────────────
-let wasPlayingBeforeDuck = false;
+
 let tracks = [], currentIdx = -1;
 let userVolume = 70, isMuted = false;
 let isShuffle = false, isRepeat = false;
@@ -755,6 +755,7 @@ let locActive = false, locTimer = null, locCountdown = 60;
 let ytPlayer = null, ytReady = false;
 let currentVideoId = null;
 let progressTimer = null;
+let wasPlayingBeforeDuck = false;
 
 // ─── YOUTUBE API ─────────────────────────────────────────
 window.onYouTubeIframeAPIReady = function () {
