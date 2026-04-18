@@ -746,6 +746,7 @@ textarea::placeholder { color: var(--sub2); }
 const YT_KEY = 'AIzaSyA9bs1dq8qQPoUn30BzAJlsul-A_Cs32C4';
 
 // ─── STATE ───────────────────────────────────────────────
+let wasPlayingBeforeDuck = false;
 let tracks = [], currentIdx = -1;
 let userVolume = 70, isMuted = false;
 let isShuffle = false, isRepeat = false;
@@ -890,7 +891,6 @@ function fmtTime(s) {
 }
 
 // ─── DUCK ────────────────────────────────────────────────
-let volumeInterval = null;
 function duckMusic(on) {
   isDucked = on;
   document.getElementById('duckBanner').style.display = on ? 'flex' : 'none';
@@ -898,13 +898,17 @@ function duckMusic(on) {
   if (!ytPlayer || !ytReady) return;
 
   if (on) {
-    // 🎙️ LOCUTOR HABLANDO → PAUSA
+    // Guardar estado real antes de pausar
+    wasPlayingBeforeDuck = isPlaying;
+
+    // Locutor habla → pausar música
     ytPlayer.pauseVideo();
   } else {
-    // 🎵 LOCUTOR TERMINÓ → REANUDA
-    if (currentVideoId) {
+    // Locutor termina → solo reanudar si estaba sonando antes
+    if (currentVideoId && wasPlayingBeforeDuck) {
       ytPlayer.playVideo();
     }
+    wasPlayingBeforeDuck = false;
   }
 }
 // ─── RESTO DEL CÓDIGO (SIN CAMBIOS IMPORTANTES) ──────────
