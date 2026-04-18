@@ -1,189 +1,1162 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Music Pro - Final</title>
-    <style>
-        :root {
-            --bg: #0f0f0f;
-            --nav: #0f0f0f;
-            --text: #ffffff;
-            --accent: #ff0000;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>RadioVoz · Estación en Vivo</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+/* ─── RESET & ROOT ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Roboto', Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
+:root {
+  --bg:        #08080f;
+  --bg2:       #0f0f1a;
+  --bg3:       #14141f;
+  --surface:   #1a1a28;
+  --surf2:     #1f1f30;
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(255,255,255,0.13);
+  --accent:    #c8f050;
+  --accent2:   #a8d940;
+  --purple:    #7b5ea7;
+  --purpleL:   #9d7fcb;
+  --red:       #ff4d6d;
+  --text:      #f0f0f8;
+  --sub:       #7070a0;
+  --sub2:      #50507a;
+  --radius:    16px;
+  --radius-sm: 10px;
+  --shadow:    0 8px 32px rgba(0,0,0,0.5);
+}
 
-        header {
-            background: var(--nav);
-            padding: 15px;
-            display: flex;
-            justify-content: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            border-bottom: 1px solid #333;
-        }
+html { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; scroll-behavior: smooth; }
 
-        .search-bar {
-            display: flex;
-            width: 100%;
-            max-width: 600px;
-        }
+body { min-height: 100vh; background: var(--bg); overflow-x: hidden; }
 
-        .search-bar input {
-            flex: 1;
-            padding: 12px 20px;
-            border-radius: 40px 0 0 40px;
-            border: 1px solid #333;
-            background: #121212;
-            color: white;
-            outline: none;
-        }
+/* ─── NOISE OVERLAY ────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
 
-        .search-bar button {
-            padding: 0 20px;
-            border-radius: 0 40px 40px 0;
-            border: 1px solid #333;
-            background: #222;
-            color: white;
-            cursor: pointer;
-        }
+/* ─── APP SHELL ────────────────────────────────────────── */
+#app {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+  padding-bottom: 120px;
+}
 
-        .content {
-            max-width: 1000px;
-            margin: 20px auto;
-            padding: 0 15px;
-        }
+/* ─── HEADER ───────────────────────────────────────────── */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(8,8,15,0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
 
-        .video-container {
-            width: 100%;
-            aspect-ratio: 16/9;
-            background: #000;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid #333;
-        }
+.header-brand {
+  display: flex; align-items: center; gap: 10px;
+}
 
-        iframe { width: 100%; height: 100%; border: none; }
+.brand-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
 
-        .video-info { margin-top: 15px; border-bottom: 1px solid #333; padding-bottom: 15px; }
-        
-        .error-fix-msg {
-            font-size: 12px;
-            color: #aaa;
-            margin-top: 10px;
-            background: #222;
-            padding: 10px;
-            border-radius: 8px;
-        }
+.brand-icon svg { width: 20px; height: 20px; fill: #000; }
 
-        .video-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
+.brand-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px; font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+.brand-name span { color: var(--accent); }
 
-        .video-item { cursor: pointer; transition: 0.3s; }
-        .video-item:hover { transform: translateY(-5px); }
-        .video-item img { width: 100%; border-radius: 10px; }
-        .video-item h3 { font-size: 14px; margin: 8px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.live-badge {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--red);
+  color: #fff;
+  font-size: 10px; font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 100px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: livepulse 1.2s infinite; }
+@keyframes livepulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(0.7)} }
 
-        a { color: var(--accent); text-decoration: none; font-weight: bold; }
-    </style>
+/* ─── SECTION WRAPPER ──────────────────────────────────── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin: 14px 14px 0;
+  overflow: hidden;
+}
+
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sub);
+  display: flex; align-items: center; gap: 7px;
+}
+
+.pill-badge {
+  font-size: 10px; padding: 3px 8px;
+  border-radius: 100px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.pill-green { background: #1db95425; color: #1db954; }
+.pill-red   { background: #ff4d6d22; color: var(--red); }
+.pill-acc   { background: #c8f05022; color: var(--accent); }
+
+/* ─── NOW PLAYING ──────────────────────────────────────── */
+.now-playing-art {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  background: var(--bg3);
+}
+
+#ytIframe {
+  width: 100%; height: 100%;
+  border: none; display: block;
+}
+
+.art-placeholder {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 10px;
+  background: radial-gradient(ellipse at center, #1a1a35 0%, #08080f 100%);
+}
+.art-placeholder .icon { font-size: 52px; opacity: .3; }
+.art-placeholder p { font-size: 12px; color: var(--sub2); }
+
+.np-body { padding: 16px; }
+
+.np-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px; font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  letter-spacing: -0.3px;
+}
+
+.np-channel {
+  font-size: 13px; color: var(--sub);
+  margin-top: 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Progress */
+.progress-wrap {
+  margin: 14px 0 10px;
+  position: relative;
+  cursor: pointer;
+}
+
+.progress-track {
+  height: 3px;
+  background: var(--border2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 2px;
+  width: 0%;
+  transition: width 1s linear;
+}
+
+.time-row {
+  display: flex; justify-content: space-between;
+  margin-top: 6px;
+  font-size: 11px; color: var(--sub2);
+}
+
+/* Controls */
+.controls {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 2px;
+}
+
+.ctrl {
+  background: none; border: none;
+  color: var(--sub); cursor: pointer;
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  transition: all .15s;
+  font-size: 0;
+}
+.ctrl:hover { background: var(--border); color: var(--text); }
+.ctrl svg { width: 20px; height: 20px; fill: currentColor; }
+.ctrl.active svg { fill: var(--accent); }
+
+.ctrl-play {
+  width: 52px; height: 52px;
+  background: var(--accent);
+  border: none; border-radius: 50%;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+  box-shadow: 0 0 24px #c8f05040;
+}
+.ctrl-play:hover { background: var(--accent2); transform: scale(1.05); }
+.ctrl-play:active { transform: scale(.97); }
+.ctrl-play svg { width: 22px; height: 22px; fill: #000; margin-left: 2px; }
+.ctrl-play.pause svg { margin-left: 0; }
+
+/* Volume */
+.vol-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 0 2px;
+  border-top: 1px solid var(--border);
+  margin-top: 14px;
+}
+
+.vol-icon { font-size: 16px; cursor: pointer; user-select: none; flex-shrink: 0; }
+
+input[type=range] {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  background: var(--border2);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 6px #c8f05060;
+}
+input[type=range]::-moz-range-thumb {
+  width: 14px; height: 14px;
+  border-radius: 50%; border: none;
+  background: var(--accent);
+  cursor: pointer;
+}
+
+.vol-val { font-size: 11px; color: var(--sub2); min-width: 30px; text-align: right; }
+
+/* ─── DUCK BANNER ──────────────────────────────────────── */
+#duckBanner {
+  display: none;
+  margin: 0 14px;
+  background: linear-gradient(135deg, #ff4d6d18, #ff4d6d0a);
+  border: 1px solid #ff4d6d30;
+  border-radius: var(--radius-sm);
+  padding: 9px 14px;
+  font-size: 12px; color: var(--red);
+  align-items: center; gap: 8px;
+  animation: fadeSlide .2s ease;
+}
+@keyframes fadeSlide { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:none} }
+
+/* ─── LOCUTOR ──────────────────────────────────────────── */
+.locutor-body { padding: 14px 16px; }
+
+.textarea-wrap { position: relative; margin-bottom: 12px; }
+
+textarea {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 14px; color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  line-height: 1.6;
+  resize: none; outline: none;
+  transition: border-color .2s;
+}
+textarea:focus { border-color: var(--border2); }
+textarea::placeholder { color: var(--sub2); }
+
+.char-count { position: absolute; bottom: 10px; right: 12px; font-size: 10px; color: var(--sub2); pointer-events: none; }
+
+.voice-select {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  font-size: 13px; color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  outline: none; cursor: pointer;
+  margin-bottom: 12px;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%2370709a' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.btn-row { display: flex; gap: 8px; align-items: center; }
+
+.btn {
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  display: flex; align-items: center; gap: 7px;
+  transition: all .15s;
+  white-space: nowrap;
+  background: transparent; color: var(--text);
+}
+.btn:hover { background: var(--surf2); }
+.btn:active { transform: scale(.97); }
+
+.btn-accent {
+  background: var(--accent);
+  color: #000; border-color: var(--accent);
+  font-weight: 600;
+}
+.btn-accent:hover { background: var(--accent2); border-color: var(--accent2); }
+
+.btn-danger { background: #ff4d6d20; color: var(--red); border-color: #ff4d6d30; }
+.btn-danger:hover { background: #ff4d6d30; }
+
+.btn-ghost { background: var(--bg2); }
+
+.status-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--sub);
+  min-height: 36px;
+}
+
+.pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: #1db954; animation: livepulse 1s infinite; flex-shrink: 0; }
+
+.countdown-chip {
+  display: inline-flex; align-items: center;
+  background: #c8f05015;
+  border: 1px solid #c8f05030;
+  border-radius: 100px;
+  padding: 2px 10px;
+  font-size: 12px; font-weight: 600; color: var(--accent);
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── SEARCH ───────────────────────────────────────────── */
+.search-body { padding: 14px 16px; }
+
+.search-row { display: flex; gap: 8px; margin-bottom: 14px; }
+
+.search-input {
+  flex: 1;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  font-size: 14px; color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  transition: border-color .2s;
+}
+.search-input:focus { border-color: var(--border2); }
+.search-input::placeholder { color: var(--sub2); }
+
+.btn-search {
+  background: var(--accent);
+  color: #000; border: none;
+  border-radius: var(--radius-sm);
+  padding: 11px 18px;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  flex-shrink: 0;
+  transition: all .15s;
+}
+.btn-search:hover { background: var(--accent2); }
+.btn-search:active { transform: scale(.97); }
+
+/* Tag pills */
+.tag-scroll {
+  display: flex; gap: 7px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 14px;
+  scrollbar-width: none;
+}
+.tag-scroll::-webkit-scrollbar { display: none; }
+
+.tag {
+  flex-shrink: 0;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 6px 14px;
+  font-size: 12px; font-weight: 500;
+  color: var(--sub);
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+  font-family: 'DM Sans', sans-serif;
+}
+.tag:hover { color: var(--text); border-color: var(--border2); }
+.tag.on { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+
+/* ─── RESULTS ──────────────────────────────────────────── */
+.results { display: flex; flex-direction: column; gap: 6px; }
+
+.result-card {
+  display: flex; gap: 12px; align-items: center;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all .15s;
+  position: relative;
+  overflow: hidden;
+}
+.result-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--accent);
+  transform: scaleY(0);
+  transition: transform .2s;
+  border-radius: 0 2px 2px 0;
+}
+.result-card:hover { border-color: var(--border2); background: var(--surf2); }
+.result-card:hover::before { transform: scaleY(1); }
+.result-card.active { border-color: #c8f05040; background: #c8f05009; }
+.result-card.active::before { transform: scaleY(1); }
+
+.result-thumb {
+  width: 72px; height: 44px;
+  border-radius: 7px;
+  object-fit: cover;
+  background: var(--bg3);
+  flex-shrink: 0;
+  display: block;
+}
+
+.result-info { flex: 1; min-width: 0; }
+
+.result-title {
+  font-size: 13px; font-weight: 500; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.result-channel {
+  font-size: 11px; color: var(--sub2);
+  margin-top: 3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.result-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+.play-mini {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.play-mini:hover { background: var(--accent2); transform: scale(1.1); }
+.play-mini svg { width: 12px; height: 12px; fill: #000; margin-left: 1px; }
+.play-mini.is-pause svg { margin-left: 0; }
+
+/* Loading / empty states */
+.state-msg {
+  text-align: center; padding: 32px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.state-msg .icon { font-size: 36px; opacity: .3; }
+.state-msg p { font-size: 13px; color: var(--sub); }
+
+.spinner {
+  width: 28px; height: 28px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── RELATED HEADING ──────────────────────────────────── */
+.related-head {
+  font-family: 'Syne', sans-serif;
+  font-size: 12px; font-weight: 700;
+  color: var(--sub); text-transform: uppercase; letter-spacing: .08em;
+  padding: 12px 0 8px;
+}
+
+/* ─── SCROLL TO TOP ────────────────────────────────────── */
+#scrollTop {
+  position: fixed; bottom: 24px; right: 18px;
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200;
+  box-shadow: 0 4px 16px #c8f05040;
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s, transform .2s;
+  transform: translateY(8px);
+}
+#scrollTop.show { opacity: 1; pointer-events: auto; transform: none; }
+#scrollTop svg { width: 18px; height: 18px; fill: #000; }
+
+/* ─── FOOTER NOTE ──────────────────────────────────────── */
+.footer-note {
+  text-align: center;
+  font-size: 11px; color: var(--sub2);
+  padding: 20px 20px 0;
+  line-height: 1.6;
+}
+
+/* ─── TOAST ────────────────────────────────────────────── */
+#toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(8px);
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 10px 18px;
+  font-size: 13px; color: var(--text);
+  z-index: 300;
+  opacity: 0; pointer-events: none;
+  transition: all .25s;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ─── RESPONSIVE TWEAKS ────────────────────────────────── */
+@media (max-width: 380px) {
+  .np-title { font-size: 15px; }
+  .brand-name { font-size: 16px; }
+}
+</style>
 </head>
 <body>
 
-<header>
-    <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Buscar artista o canción...">
-        <button id="searchBtn">🔍</button>
-    </div>
-</header>
+<div id="app">
 
-<div class="content">
-    <div id="playerSection" style="display: none;">
-        <div class="video-container" id="player"></div>
-        <div class="video-info">
-            <h1 id="title" style="font-size: 1.5em; margin: 0;"></h1>
-            <p id="channel" style="color: #aaa;"></p>
-            <div class="error-fix-msg" id="fixMsg">
-                ¿Ves un error? Algunos videos oficiales no permiten reproducción externa. 
-                <a id="externalLink" target="_blank">Haz clic aquí para verlo directo en YouTube</a>.
-            </div>
+  <!-- ═══ HEADER ═══════════════════════════════════════════ -->
+  <header class="header">
+    <div class="header-brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 100 18A9 9 0 0012 3zm0 2a7 7 0 110 14A7 7 0 0112 5zm0 3a4 4 0 100 8 4 4 0 000-8zm0 2a2 2 0 110 4 2 2 0 010-4z"/></svg>
+      </div>
+      <span class="brand-name">Radio<span>Voz</span></span>
+    </div>
+    <div class="live-badge" id="liveBadge" style="display:none">
+      <span class="live-dot"></span> EN VIVO
+    </div>
+  </header>
+
+  <!-- ═══ NOW PLAYING ══════════════════════════════════════ -->
+  <div class="panel">
+    <div class="panel-head">
+      <span class="panel-label">
+        <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"/></svg>
+        Reproduciendo
+      </span>
+      <span class="pill-badge pill-acc" id="npBadge">Elige una canción</span>
+    </div>
+
+    <div class="now-playing-art">
+      <div class="art-placeholder" id="artPh">
+        <div class="icon">🎵</div>
+        <p>Busca música para comenzar</p>
+      </div>
+      <iframe id="ytIframe"
+        style="display:none"
+        allowfullscreen
+        allow="autoplay; encrypted-media; picture-in-picture">
+      </iframe>
+    </div>
+
+    <div class="np-body">
+      <div class="np-title" id="npTitle">Sin reproducción</div>
+      <div class="np-channel" id="npChannel">Busca una canción abajo para comenzar</div>
+
+      <div class="progress-wrap">
+        <div class="progress-track"><div class="progress-fill" id="npProg"></div></div>
+        <div class="time-row"><span id="tCur">0:00</span><span id="tTot">—</span></div>
+      </div>
+
+      <div class="controls">
+        <button class="ctrl" id="btnShuffle" onclick="toggleShuffle()" title="Aleatorio">
+          <svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+        </button>
+        <button class="ctrl" onclick="prevTrack()" title="Anterior">
+          <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </button>
+        <button class="ctrl-play" id="btnPlay" onclick="togglePlay()">
+          <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="ctrl" onclick="nextTrack()" title="Siguiente">
+          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+        </button>
+        <button class="ctrl" id="btnRepeat" onclick="toggleRepeat()" title="Repetir">
+          <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+        </button>
+      </div>
+
+      <div class="vol-row">
+        <span class="vol-icon" id="volIcon" onclick="toggleMute()">🔊</span>
+        <input type="range" id="volSlider" min="0" max="100" value="70" step="1" oninput="setVolume(this.value)">
+        <span class="vol-val" id="volVal">70%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ DUCK BANNER ══════════════════════════════════════ -->
+  <div id="duckBanner">
+    <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" style="flex-shrink:0"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+    🎙️ El locutor está hablando — música reducida al 15%
+  </div>
+
+  <!-- ═══ LOCUTOR ═══════════════════════════════════════════ -->
+  <div class="panel">
+    <div class="panel-head">
+      <span class="panel-label">
+        <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3zm-1 3a1 1 0 012 0v8a1 1 0 01-2 0V4zm6.91 8c-.46 3.06-3.06 5.44-6.16 5.44S6.55 15.06 6.09 12H4c.49 3.84 3.6 6.88 7.5 7.44V22h1v-2.56c3.9-.56 7.01-3.6 7.5-7.44h-2.09z"/></svg>
+        Locutor automático
+      </span>
+      <span class="pill-badge pill-green" id="locBadge" style="display:none">● Activo</span>
+    </div>
+
+    <div class="locutor-body">
+      <div class="textarea-wrap">
+        <textarea id="locText" rows="3"
+          placeholder="Escribe el mensaje que el locutor repetirá cada minuto…"
+          oninput="updateCharCount()"
+          maxlength="500"
+        >Bienvenidos a nuestra transmisión en vivo. Estás escuchando RadioVoz, con la mejor música seleccionada para ti. ¡Gracias por sintonizarnos!</textarea>
+        <span class="char-count" id="charCount">138/500</span>
+      </div>
+
+      <select class="voice-select" id="voiceSelect" onchange="previewVoice()"></select>
+
+      <div class="btn-row">
+        <button class="btn btn-accent" id="btnStart" onclick="startLocutor()">
+          <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Iniciar locutor
+        </button>
+        <button class="btn btn-danger" id="btnStop" onclick="stopLocutor()" style="display:none">
+          <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12"/></svg>
+          Detener
+        </button>
+        <button class="btn btn-ghost" onclick="testVoice()" title="Probar voz">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/></svg>
+        </button>
+      </div>
+
+      <div class="status-row" id="statusRow">
+        <span style="color:var(--sub2)">Inactivo — presiona Iniciar para comenzar</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ BÚSQUEDA ═══════════════════════════════════════════ -->
+  <div class="panel">
+    <div class="panel-head">
+      <span class="panel-label">
+        <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        Buscar música
+      </span>
+    </div>
+
+    <div class="search-body">
+      <div class="search-row">
+        <input class="search-input" id="searchInput"
+          placeholder="Artista, canción, álbum…"
+          onkeydown="if(event.key==='Enter') doSearch()">
+        <button class="btn-search" onclick="doSearch()">Buscar</button>
+      </div>
+
+      <div class="tag-scroll" id="tagScroll"></div>
+
+      <div id="results">
+        <div class="state-msg">
+          <span class="icon">🎶</span>
+          <p>Elige un género o busca una canción para comenzar</p>
         </div>
+      </div>
     </div>
+  </div>
 
-    <h2 id="statusTitle">Buscando éxitos...</h2>
-    <div class="video-grid" id="grid"></div>
+  <p class="footer-note">
+    RadioVoz · Powered by YouTube Data API v3 · Web Speech API<br>
+    Previews y streaming via YouTube embeds
+  </p>
 </div>
 
+<!-- Scroll to top -->
+<button id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <svg viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
+</button>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- YouTube IFrame API -->
+<script src="https://www.youtube.com/iframe_api"></script>
+
 <script>
-    const API_KEY = 'AIzaSyA9bs1dq8qQPoUn30BzAJlsul-A_Cs32C4';
+// ─── CONFIG ──────────────────────────────────────────────
+const YT_KEY = 'AIzaSyA9bs1dq8qQPoUn30BzAJlsul-A_Cs32C4';
 
-    async function search(query) {
-        document.getElementById('statusTitle').innerText = `Resultados para: ${query}`;
-        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=15&q=${encodeURIComponent(query)}&type=video&key=${API_KEY}`;
-        
-        try {
-            const res = await fetch(url);
-            const data = await res.json();
-            render(data.items);
-        } catch (e) {
-            console.error(e);
+// ─── STATE ───────────────────────────────────────────────
+let tracks = [], currentIdx = -1;
+let userVolume = 70, isMuted = false;
+let isShuffle = false, isRepeat = false;
+let isPlaying = false, isDucked = false;
+let locActive = false, locTimer = null, locCountdown = 60;
+let ytPlayer = null, ytReady = false;
+let currentVideoId = null;
+let progressTimer = null;
+
+// ─── YOUTUBE API ─────────────────────────────────────────
+window.onYouTubeIframeAPIReady = function () {
+  ytPlayer = new YT.Player('ytIframe', {
+    height: '100%', width: '100%',
+    playerVars: { autoplay: 1, controls: 0, rel: 0, modestbranding: 1, enablejsapi: 1 },
+    events: {
+      onReady(e) { ytReady = true; e.target.setVolume(userVolume); },
+      onStateChange(e) {
+        if (e.data === YT.PlayerState.PLAYING) {
+          isPlaying = true; updatePlayBtn(true);
+          startProgressTimer();
+        } else if (e.data === YT.PlayerState.PAUSED) {
+          isPlaying = false; updatePlayBtn(false);
+        } else if (e.data === YT.PlayerState.ENDED) {
+          stopProgressTimer();
+          if (isRepeat) ytPlayer.playVideo();
+          else nextTrack();
         }
+      }
     }
+  });
+};
 
-    function render(items) {
-        const grid = document.getElementById('grid');
-        grid.innerHTML = '';
-        items.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'video-item';
-            div.onclick = () => play(item.id.videoId, item.snippet.title, item.snippet.channelTitle);
-            div.innerHTML = `
-                <img src="${item.snippet.thumbnails.medium.url}">
-                <h3>${item.snippet.title}</h3>
-                <p style="font-size:12px; color:#aaa;">${item.snippet.channelTitle}</p>
-            `;
-            grid.appendChild(div);
-        });
+function loadVideo(videoId) {
+  currentVideoId = videoId;
+  document.getElementById('artPh').style.display = 'none';
+  document.getElementById('ytIframe').style.display = 'block';
+  if (ytPlayer && ytReady) {
+    ytPlayer.loadVideoById(videoId);
+    ytPlayer.setVolume(isDucked ? Math.round(userVolume * 0.15) : userVolume);
+  } else {
+    const src = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1&controls=0&rel=0&modestbranding=1`;
+    document.getElementById('ytIframe').src = src;
+  }
+}
+
+function updatePlayBtn(playing) {
+  const icon = document.getElementById('playIcon');
+  const btn = document.getElementById('btnPlay');
+  if (playing) {
+    icon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+    btn.classList.add('pause');
+  } else {
+    icon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+    btn.classList.remove('pause');
+  }
+}
+
+function togglePlay() {
+  if (!currentVideoId) { showToast('🎵 Selecciona una canción primero'); return; }
+  if (!ytPlayer || !ytReady) return;
+  if (isPlaying) ytPlayer.pauseVideo(); else ytPlayer.playVideo();
+}
+
+function prevTrack() {
+  if (!tracks.length) return;
+  const pi = (currentIdx - 1 + tracks.length) % tracks.length;
+  selectTrack(pi);
+}
+
+function nextTrack() {
+  if (!tracks.length) return;
+  const ni = isShuffle
+    ? Math.floor(Math.random() * tracks.length)
+    : (currentIdx + 1) % tracks.length;
+  selectTrack(ni);
+}
+
+function toggleShuffle() {
+  isShuffle = !isShuffle;
+  document.getElementById('btnShuffle').classList.toggle('active', isShuffle);
+}
+
+function toggleRepeat() {
+  isRepeat = !isRepeat;
+  document.getElementById('btnRepeat').classList.toggle('active', isRepeat);
+}
+
+function setVolume(v) {
+  userVolume = parseInt(v);
+  document.getElementById('volVal').textContent = v + '%';
+  isMuted = false;
+  document.getElementById('volIcon').textContent = userVolume === 0 ? '🔇' : userVolume < 50 ? '🔉' : '🔊';
+  if (!isDucked && ytPlayer && ytReady) ytPlayer.setVolume(userVolume);
+}
+
+function toggleMute() {
+  isMuted = !isMuted;
+  document.getElementById('volIcon').textContent = isMuted ? '🔇' : '🔊';
+  if (ytPlayer && ytReady) ytPlayer.setVolume(isMuted ? 0 : userVolume);
+}
+
+// Progress bar
+function startProgressTimer() {
+  stopProgressTimer();
+  progressTimer = setInterval(updateProgressBar, 1000);
+}
+function stopProgressTimer() { clearInterval(progressTimer); }
+function updateProgressBar() {
+  if (!ytPlayer || !ytReady) return;
+  const cur = ytPlayer.getCurrentTime() || 0;
+  const dur = ytPlayer.getDuration() || 0;
+  if (dur > 0) {
+    document.getElementById('npProg').style.width = ((cur / dur) * 100) + '%';
+    document.getElementById('tCur').textContent = fmtTime(cur);
+    document.getElementById('tTot').textContent = fmtTime(dur);
+  }
+}
+function fmtTime(s) {
+  s = Math.floor(s || 0);
+  return Math.floor(s / 60) + ':' + (s % 60 < 10 ? '0' : '') + (s % 60);
+}
+
+// ─── DUCK ────────────────────────────────────────────────
+function duckMusic(on) {
+  isDucked = on;
+  document.getElementById('duckBanner').style.display = on ? 'flex' : 'none';
+  if (ytPlayer && ytReady) {
+    ytPlayer.setVolume(on ? Math.round(userVolume * 0.15) : userVolume);
+  }
+}
+
+// ─── SEARCH / RESULTS ────────────────────────────────────
+async function ytSearch(query, maxResults = 15) {
+  const params = new URLSearchParams({
+    part: 'snippet', type: 'video',
+    q: query, maxResults,
+    videoCategoryId: '10', // Music category
+    key: YT_KEY
+  });
+  const res = await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`);
+  if (!res.ok) throw new Error('API error');
+  return res.json();
+}
+
+async function doSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) return;
+  showLoading();
+  try {
+    const data = await ytSearch(q);
+    tracks = data.items || [];
+    renderResults(tracks);
+  } catch (e) {
+    showError('Error de conexión. Verifica tu internet.');
+  }
+}
+
+async function searchByTag(query, el) {
+  document.querySelectorAll('.tag').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('searchInput').value = query;
+  showLoading();
+  try {
+    const data = await ytSearch(query + ' music mix 2024', 20);
+    tracks = data.items || [];
+    renderResults(tracks);
+  } catch (e) {
+    showError('Error de conexión.');
+  }
+}
+
+async function fetchRelated(videoId) {
+  try {
+    const params = new URLSearchParams({
+      part: 'snippet', type: 'video',
+      relatedToVideoId: videoId,
+      maxResults: 12, videoCategoryId: '10', key: YT_KEY
+    });
+    const res = await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`);
+    const data = await res.json();
+    if (data.items && data.items.length) {
+      const merged = [...tracks, ...data.items.filter(i => !tracks.find(t => t.id?.videoId === i.id?.videoId))].slice(0, 30);
+      tracks = merged;
+      renderResults(merged, currentIdx);
     }
+  } catch (e) {}
+}
 
-    function play(id, title, channel) {
-        document.getElementById('playerSection').style.display = 'block';
-        document.getElementById('title').innerText = title;
-        document.getElementById('channel').innerText = channel;
-        document.getElementById('externalLink').href = `https://www.youtube.com/watch?v=${id}`;
-        
-        // El "Origin" es clave para que YouTube no bloquee la conexión
-        const origin = window.location.origin === "null" ? "http://localhost" : window.location.origin;
+function renderResults(list, activeIdx = -1) {
+  const box = document.getElementById('results');
+  if (!list.length) { showError('Sin resultados.'); return; }
+  box.innerHTML = '';
+  list.forEach((item, i) => {
+    const vid = item.id?.videoId;
+    if (!vid) return;
+    const title = item.snippet.title;
+    const channel = item.snippet.channelTitle;
+    const thumb = item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url;
+    const card = document.createElement('div');
+    card.className = 'result-card' + (i === activeIdx ? ' active' : '');
+    card.id = 'card_' + vid;
+    card.innerHTML = `
+      <img class="result-thumb" src="${thumb}" alt="" loading="lazy"
+        onerror="this.style.background='#222';this.style.display='block'">
+      <div class="result-info">
+        <div class="result-title">${escHtml(title)}</div>
+        <div class="result-channel">${escHtml(channel)}</div>
+      </div>
+      <div class="result-actions">
+        <button class="play-mini ${i === activeIdx ? 'is-pause' : ''}" title="Reproducir">
+          ${i === activeIdx
+            ? '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'
+            : '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>'}
+        </button>
+      </div>`;
+    card.onclick = () => selectTrack(i);
+    box.appendChild(card);
+  });
+}
 
-        // Versión de URL con parámetros de compatibilidad máxima
-        const embedUrl = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&origin=${origin}&rel=0&showinfo=0&enablejsapi=1`;
-        
-        document.getElementById('player').innerHTML = `
-            <iframe 
-                src="${embedUrl}" 
-                allow="autoplay; encrypted-media" 
-                allowfullscreen>
-            </iframe>`;
-        
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+function selectTrack(idx) {
+  if (idx < 0 || idx >= tracks.length) return;
+  currentIdx = idx;
+  const item = tracks[idx];
+  const vid = item.id?.videoId;
+  if (!vid) return;
 
-    document.getElementById('searchBtn').onclick = () => search(document.getElementById('searchInput').value);
-    document.getElementById('searchInput').onkeypress = (e) => { if(e.key === 'Enter') search(e.target.value); };
+  // Update NP
+  document.getElementById('npTitle').textContent = item.snippet.title;
+  document.getElementById('npChannel').textContent = item.snippet.channelTitle;
+  document.getElementById('npBadge').textContent = '▶ Reproduciendo';
+  document.getElementById('liveBadge').style.display = 'flex';
 
-    // Carga inicial
-    window.onload = () => search('Daddy Yankee 2026');
+  loadVideo(vid);
+  renderResults(tracks, idx);
+  fetchRelated(vid);
+}
+
+// ─── VOICE / LOCUTOR ─────────────────────────────────────
+function loadVoices() {
+  const syn = window.speechSynthesis;
+  const fill = () => {
+    const all = syn.getVoices();
+    const es = all.filter(v => v.lang.startsWith('es'));
+    const en = all.filter(v => v.lang.startsWith('en'));
+    const sel = document.getElementById('voiceSelect');
+    sel.innerHTML = '';
+    const addGroup = (label, arr) => {
+      if (!arr.length) return;
+      const g = document.createElement('optgroup');
+      g.label = label;
+      arr.forEach(v => {
+        const o = document.createElement('option');
+        o.value = v.name;
+        o.textContent = v.name + (v.localService ? ' ✓' : '');
+        g.appendChild(o);
+      });
+      sel.appendChild(g);
+    };
+    addGroup('🇪🇸 Español', es);
+    addGroup('🇺🇸 English', en);
+    if (!sel.options.length) sel.innerHTML = '<option>Sin voces disponibles</option>';
+  };
+  fill();
+  syn.onvoiceschanged = fill;
+}
+
+function getSelectedVoice() {
+  const name = document.getElementById('voiceSelect').value;
+  return window.speechSynthesis.getVoices().find(v => v.name === name) || null;
+}
+
+function speak(text, onEnd) {
+  const syn = window.speechSynthesis;
+  syn.cancel();
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.rate = 0.92; utt.pitch = 1.0; utt.volume = 1.0;
+  const v = getSelectedVoice();
+  if (v) utt.voice = v;
+  utt.onstart = () => duckMusic(true);
+  utt.onend = utt.onerror = () => {
+    setTimeout(() => duckMusic(false), 400);
+    if (onEnd) onEnd();
+  };
+  setTimeout(() => syn.speak(utt), 100);
+}
+
+function testVoice() {
+  speak('Hola, esta es la voz del locutor de RadioVoz. Todo suena perfecto.');
+}
+
+function previewVoice() {} // no-op, called on change
+
+function updateCharCount() {
+  const val = document.getElementById('locText').value;
+  document.getElementById('charCount').textContent = val.length + '/500';
+}
+
+function startLocutor() {
+  if (locActive) return;
+  locActive = true;
+  locCountdown = 60;
+  document.getElementById('btnStart').style.display = 'none';
+  document.getElementById('btnStop').style.display = 'flex';
+  document.getElementById('locBadge').style.display = 'inline-flex';
+  speakNow();
+  locTimer = setInterval(() => {
+    if (!locActive) return;
+    locCountdown--;
+    if (locCountdown <= 0) { locCountdown = 60; speakNow(); }
+    updateStatus();
+  }, 1000);
+}
+
+function speakNow() {
+  const text = document.getElementById('locText').value.trim();
+  if (!text) return;
+  speak(text, () => { locCountdown = 60; updateStatus(); });
+  updateStatus();
+}
+
+function stopLocutor() {
+  locActive = false;
+  window.speechSynthesis.cancel();
+  clearInterval(locTimer);
+  duckMusic(false);
+  document.getElementById('btnStart').style.display = 'flex';
+  document.getElementById('btnStop').style.display = 'none';
+  document.getElementById('locBadge').style.display = 'none';
+  document.getElementById('statusRow').innerHTML = '<span style="color:var(--sub2)">Detenido manualmente.</span>';
+}
+
+function updateStatus() {
+  if (!locActive) return;
+  document.getElementById('statusRow').innerHTML = `
+    <span class="pulse-dot"></span>
+    <span style="color:var(--sub)">Locutor activo</span>
+    <span class="countdown-chip">${locCountdown}s</span>`;
+}
+
+// ─── GENRES / TAGS ───────────────────────────────────────
+const GENRES = [
+  { n: '🔥 Top Global', q: 'top hits global' },
+  { n: '🎤 Pop', q: 'pop hits' },
+  { n: '🎸 Rock', q: 'rock classic hits' },
+  { n: '🎧 Rap / Hip-Hop', q: 'rap hip hop' },
+  { n: '💃 Reggaetón', q: 'reggaeton hits' },
+  { n: '🌴 Latino', q: 'latin music hits' },
+  { n: '☕ Lo-fi', q: 'lofi hip hop chill beats' },
+  { n: '🎷 Jazz', q: 'jazz relaxing cafe' },
+  { n: '🎼 Clásica', q: 'classical music relaxing' },
+  { n: '⚡ Electrónica', q: 'electronic dance music' },
+  { n: '🌿 Relajante', q: 'relaxing music sleep' },
+  { n: '🔵 R&B', q: 'r&b soul music' },
+];
+
+function buildTags() {
+  const row = document.getElementById('tagScroll');
+  GENRES.forEach((g, i) => {
+    const t = document.createElement('button');
+    t.className = 'tag' + (i === 0 ? ' on' : '');
+    t.textContent = g.n;
+    t.onclick = () => searchByTag(g.q, t);
+    row.appendChild(t);
+  });
+}
+
+// ─── HELPERS ─────────────────────────────────────────────
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showLoading() {
+  document.getElementById('results').innerHTML = `
+    <div class="state-msg">
+      <div class="spinner"></div>
+      <p>Cargando música...</p>
+    </div>`;
+}
+
+function showError(msg) {
+  document.getElementById('results').innerHTML = `
+    <div class="state-msg">
+      <span class="icon">😔</span>
+      <p>${msg}</p>
+    </div>`;
+}
+
+function showToast(msg, dur = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+// Scroll to top button
+window.addEventListener('scroll', () => {
+  document.getElementById('scrollTop').classList.toggle('show', window.scrollY > 300);
+}, { passive: true });
+
+// ─── INIT ─────────────────────────────────────────────────
+loadVoices();
+buildTags();
+// Auto-load top global on start
+(async () => {
+  showLoading();
+  try {
+    const data = await ytSearch('top hits global music 2024', 20);
+    tracks = data.items || [];
+    renderResults(tracks);
+  } catch (e) { showError('Carga inicial fallida. Intenta buscar algo.'); }
+})();
 </script>
 </body>
 </html>
