@@ -3,179 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bytes Audio Mixer</title>
+    <title>Bytes Auto-Radio Mixer</title>
     <style>
         :root {
-            --bg-color: #101820;
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --accent: #19510A;
+            --bg-color: #0a0a0b;
+            --accent: #19510A; /* Bytes Green */
+            --glass: rgba(255, 255, 255, 0.03);
             --text: #D7D7D6;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            margin: 0;
         }
 
-        .mixer-container {
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
+        .mixer-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 24px;
-            padding: 30px;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border-radius: 32px;
+            padding: 40px;
+            width: 400px;
+            text-align: center;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
         }
 
-        h2 { text-align: center; font-weight: 300; letter-spacing: 1px; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        
+        label { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; color: #888; }
 
-        .section {
-            margin-bottom: 25px;
-            padding: 15px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 16px;
-        }
-
-        input, textarea, button {
+        input, textarea {
             width: 100%;
-            background: rgba(255,255,255,0.1);
-            border: none;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
             color: white;
-            padding: 12px;
-            border-radius: 10px;
-            margin-top: 10px;
+            padding: 14px;
+            border-radius: 14px;
+            font-size: 14px;
+            outline: none;
             box-sizing: border-box;
         }
 
         button {
-            background: var(--accent);
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-
-        button:active { transform: scale(0.95); }
-
-        #youtube-player {
             width: 100%;
-            height: 0; /* Oculto pero funcional */
-            overflow: hidden;
+            padding: 16px;
+            border-radius: 14px;
+            border: none;
+            background: var(--accent);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
         }
 
-        .status {
-            font-size: 12px;
-            color: #888;
-            text-align: center;
-            margin-top: 10px;
+        button:hover { filter: brightness(1.2); }
+        .btn-stop { background: #4a1010; margin-top: 20px; }
+
+        #player { display: none; } /* Oculto para mantener estética */
+
+        .timer-display {
+            font-size: 11px;
+            margin-top: 15px;
+            color: var(--accent);
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-<div class="mixer-container">
-    <h2>Audio Mixer Control</h2>
+<div class="mixer-card">
+    <h1 style="font-weight: 200; margin-bottom: 30px;">Bytes <span style="font-weight: 700;">Mixer</span></h1>
 
-    <div class="section">
-        <label>1. Música de Fondo (YouTube ID)</label>
-        <input type="text" id="yt-id" placeholder="ID del video (ej: dQw4w9WgXcQ)">
-        <button onclick="loadVideo()">Cargar Música</button>
-        <div id="youtube-player"></div>
+    <div class="input-group">
+        <label>Género o Estilo de Música</label>
+        <input type="text" id="music-genre" placeholder="Ej: Deep House, Jazz, Lofi...">
     </div>
 
-    <div class="section">
-        <label>2. Voces Pregrabadas (.mp3)</label>
-        <input type="file" id="voice-upload" accept="audio/*" multiple>
-        <div id="voice-list"></div>
+    <div class="input-group">
+        <label>Texto para el Locutor (Cada 1 min)</label>
+        <textarea id="tts-content" rows="4" placeholder="Escribe aquí el anuncio que se repetirá..."></textarea>
     </div>
 
-    <div class="section">
-        <label>3. Anuncio Automático (Cada 1 min)</label>
-        <textarea id="tts-text" rows="3" placeholder="Escribe lo que la IA dirá cada minuto..."></textarea>
-        <button id="btn-auto" onclick="toggleAutoMode()">Activar Ciclo Automático</button>
-    </div>
+    <button id="main-btn" onclick="startSystem()">Iniciar Radio y Locución</button>
+    <button class="btn-stop" id="stop-btn" onclick="stopSystem()" style="display:none;">Detener Todo</button>
 
-    <div class="status" id="status-bar">Sistema listo.</div>
+    <div id="player"></div>
+    <div class="timer-display" id="status">SISTEMA APAGADO</div>
 </div>
 
 <script>
     let player;
-    let autoInterval;
-    let isAutoOn = false;
+    let ttsInterval;
+    let isRunning = false;
 
-    // 1. Cargar API de YouTube
-    function onYouTubeIframeAPIReady() {
-        console.log("YouTube API Ready");
-    }
-
-    function loadVideo() {
-        const videoId = document.getElementById('yt-id').value;
-        if (player) player.destroy();
-        
-        player = new YT.Player('youtube-player', {
-            height: '0',
-            width: '0',
-            videoId: videoId,
-            events: {
-                'onReady': (event) => {
-                    event.target.playVideo();
-                    document.getElementById('status-bar').innerText = "Música cargada.";
-                }
-            }
-        });
-    }
-
-    // 2. Función de Mezcla: Baja música, habla, sube música
-    function speakText() {
-        const text = document.getElementById('tts-text').value;
-        if (!text) return;
-
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'es-ES';
-        utterance.rate = 0.9; // Velocidad un poco más natural
-
-        // Atenuar música
-        if (player && player.setVolume) player.setVolume(20);
-
-        utterance.onend = () => {
-            // Restaurar música
-            if (player && player.setVolume) player.setVolume(100);
-            document.getElementById('status-bar').innerText = "Esperando siguiente minuto...";
-        };
-
-        window.speechSynthesis.speak(utterance);
-    }
-
-    // 3. Control del Ciclo de 1 Minuto
-    function toggleAutoMode() {
-        isAutoOn = !isAutoOn;
-        const btn = document.getElementById('btn-auto');
-
-        if (isAutoOn) {
-            btn.innerText = "Detener Ciclo";
-            btn.style.background = "#8b0000";
-            speakText(); // Primera ejecución inmediata
-            autoInterval = setInterval(speakText, 60000); // Repetir cada 60 seg
-            document.getElementById('status-bar').innerText = "Ciclo activo.";
-        } else {
-            btn.innerText = "Activar Ciclo Automático";
-            btn.style.background = "var(--accent)";
-            clearInterval(autoInterval);
-            document.getElementById('status-bar').innerText = "Ciclo detenido.";
-        }
-    }
-
-    // Cargar script de YouTube dinámicamente
+    // Cargar API de YouTube
     var tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     var firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    function startSystem() {
+        const genre = document.getElementById('music-genre').value;
+        if (!genre) return alert("Por favor ingresa un género musical.");
+        
+        isRunning = true;
+        document.getElementById('main-btn').style.display = 'none';
+        document.getElementById('stop-btn').style.display = 'block';
+        document.getElementById('status').innerText = "CONECTANDO CON YOUTUBE...";
+
+        // Crear/Reiniciar reproductor con búsqueda dinámica
+        if (player) player.destroy();
+        
+        player = new YT.Player('player', {
+            height: '0',
+            width: '0',
+            playerVars: {
+                'listType': 'search',
+                'list': genre,
+                'autoplay': 1
+            },
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange
+            }
+        });
+    }
+
+    function onPlayerReady(event) {
+        event.target.playVideo();
+        document.getElementById('status').innerText = "RADIO ACTIVA - PRÓXIMO ANUNCIO EN 60s";
+        
+        // Iniciar ciclo de 1 minuto para el texto
+        ttsInterval = setInterval(runTTS, 60000);
+    }
+
+    function onPlayerStateChange(event) {
+        // Si el video termina o hay error, la API de búsqueda salta al siguiente automáticamente
+        if (event.data === YT.PlayerState.ENDED) {
+            player.playVideo();
+        }
+    }
+
+    function runTTS() {
+        const text = document.getElementById('tts-content').value;
+        if (!text || !isRunning) return;
+
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'es-MX'; // Voz en español
+        msg.rate = 1.0;
+
+        // Bajar volumen de música
+        player.setVolume(15);
+        document.getElementById('status').innerText = "LOCUTOR HABLANDO...";
+
+        msg.onend = () => {
+            // Subir volumen al terminar
+            player.setVolume(100);
+            document.getElementById('status').innerText = "MÚSICA EN CURSO - SIGUIENTE ANUNCIO EN 60s";
+        };
+
+        window.speechSynthesis.speak(msg);
+    }
+
+    function stopSystem() {
+        isRunning = false;
+        clearInterval(ttsInterval);
+        if (player) player.stopVideo();
+        window.speechSynthesis.cancel();
+        
+        document.getElementById('main-btn').style.display = 'block';
+        document.getElementById('stop-btn').style.display = 'none';
+        document.getElementById('status').innerText = "SISTEMA APAGADO";
+    }
 </script>
 
 </body>
