@@ -3,236 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bytes Radio - Stable Search</title>
+    <title>Bytes Radio - Force Engine</title>
     <style>
-        :root {
-            --bg: #0f0f0f;
-            --yt-red: #FF0000;
-            --accent: #19510A;
-            --card: #1e1e1e;
-        }
+        :root { --bg: #0a0a0b; --yt: #FF0000; --bytes: #19510A; --card: #161617; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; padding-bottom: 110px; }
+        
+        .nav { position: sticky; top: 0; background: rgba(10,10,11,0.9); backdrop-filter: blur(10px); padding: 15px; border-bottom: 1px solid #222; z-index: 100; text-align: center; }
+        .search-wrap { display: flex; max-width: 500px; margin: 0 auto; border: 1px solid #333; border-radius: 40px; overflow: hidden; background: #000; }
+        input { flex: 1; background: transparent; border: none; color: white; padding: 12px 20px; outline: none; }
+        .search-btn { background: #222; border: none; color: white; padding: 0 20px; cursor: pointer; }
 
-        body {
-            background-color: var(--bg);
-            color: white;
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding-bottom: 120px;
-        }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .card { background: var(--card); border-radius: 15px; overflow: hidden; cursor: pointer; border: 1px solid #222; transition: 0.2s; }
+        .card:hover { border-color: var(--bytes); transform: translateY(-3px); }
+        .card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+        .card-body { padding: 12px; }
+        .card-body h4 { margin: 0; font-size: 14px; color: #efefef; }
 
-        .header {
-            position: sticky;
-            top: 0;
-            background: rgba(15,15,15,0.95);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-            z-index: 100;
-            display: flex;
-            justify-content: center;
-            border-bottom: 1px solid #333;
-        }
-
-        .search-group {
-            display: flex;
-            width: 90%;
-            max-width: 600px;
-        }
-
-        input {
-            flex: 1;
-            background: #000;
-            border: 1px solid #444;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 40px 0 0 40px;
-            outline: none;
-        }
-
-        button.search-btn {
-            background: #333;
-            border: none;
-            color: white;
-            padding: 0 25px;
-            border-radius: 0 40px 40px 0;
-            cursor: pointer;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .video-card {
-            background: var(--card);
-            border-radius: 12px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .video-card:hover { transform: translateY(-5px); background: #252525; }
-        .video-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
-        .video-card-info { padding: 12px; }
-        .video-card-info h4 { margin: 0; font-size: 14px; color: #fff; line-height: 1.4; }
-
-        .mixer-footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background: #121212;
-            border-top: 1px solid var(--accent);
-            padding: 15px 30px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-sizing: border-box;
-            z-index: 200;
-        }
-
-        .tts-box { width: 50%; }
-        textarea {
-            width: 100%;
-            background: #000;
-            border: 1px solid #444;
-            color: #ccc;
-            border-radius: 8px;
-            padding: 10px;
-            font-size: 12px;
-            resize: none;
-        }
-
-        .timer-val { font-size: 28px; font-weight: bold; color: var(--accent); }
-        #player-element { display: none; }
+        .player-bar { position: fixed; bottom: 0; width: 100%; background: #111; border-top: 2px solid var(--bytes); padding: 15px 5%; display: flex; align-items: center; justify-content: space-between; box-sizing: border-box; }
+        .tts-area { width: 45%; }
+        textarea { width: 100%; background: #000; border: 1px solid #333; color: #888; border-radius: 8px; padding: 8px; font-size: 11px; resize: none; outline: none; }
+        .timer { font-size: 24px; font-weight: 800; color: var(--bytes); font-family: monospace; }
+        button#master { background: var(--yt); color: white; border: none; padding: 12px 25px; border-radius: 30px; font-weight: bold; cursor: pointer; }
+        #yt-hidden { position: absolute; left: -9999px; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <div class="search-group">
-        <input type="text" id="search-input" placeholder="Buscar música (Ej: Artista, género)...">
-        <button class="search-btn" onclick="startSearch()">Buscar</button>
+<div class="nav">
+    <div class="search-wrap">
+        <input type="text" id="q" placeholder="Buscar música (Ej: Solomun Mix)">
+        <button class="search-btn" onclick="forceSearch()">BUSCAR</button>
     </div>
 </div>
 
-<div class="grid" id="results-grid">
-    <p style="text-align: center; grid-column: 1/-1; color: #888;">Busca algo para ver los resultados de YouTube.</p>
+<div class="grid" id="grid">
+    <p style="text-align: center; grid-column: 1/-1; color: #444; margin-top: 40px;">Escribe algo y presiona Buscar para activar los motores de YouTube.</p>
 </div>
 
-<div class="mixer-footer">
-    <div id="player-element"></div>
-    <div class="tts-box">
-        <label style="font-size: 10px; color: var(--accent); font-weight: bold;">LOCUTOR (MENSAJE CADA 1 MIN)</label>
-        <textarea id="tts-content" rows="2">Estás escuchando la radio de Abel Ghanam. Disfruta de la mejor música.</textarea>
+<div class="player-bar">
+    <div id="yt-hidden"></div>
+    <div class="tts-area">
+        <label style="font-size: 9px; color: var(--bytes); font-weight: bold; display: block; margin-bottom: 4px;">LOCUTOR ACTIVO</label>
+        <textarea id="msg" rows="2">Estás en sintonía de la radio inteligente de Abel Ghanam. Disfruta de la mejor música sin límites.</textarea>
     </div>
-    <div class="timer-val" id="timer-display">01:00</div>
-    <button id="power-btn" onclick="toggleRadio()" style="background: var(--yt-red); color: white; border: none; padding: 12px 25px; border-radius: 30px; font-weight: bold; cursor: pointer;">
-        ENCENDER RADIO
-    </button>
+    <div class="timer" id="clock">01:00</div>
+    <button id="master" onclick="control()">ENCENDER</button>
 </div>
 
 <script>
-    let player;
-    let radioOn = false;
-    let tTimer, tInterval;
-    let timeLeft = 60;
+    let p, running = false, t1, t2, sec = 60;
 
-    // Cargar YouTube API
+    // Iniciar API
     var tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
-    var firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    document.head.appendChild(tag);
 
     function onYouTubeIframeAPIReady() {
-        player = new YT.Player('player-element', {
+        p = new YT.Player('yt-hidden', {
             height: '0', width: '0',
-            events: { 'onStateChange': (e) => { if(e.data === 0) player.playVideo(); } }
+            playerVars: { 'autoplay': 0 },
+            events: { 'onStateChange': (e) => { if(e.data === 0) p.playVideo(); } }
         });
     }
 
-    // Buscador mediante IFrame Cue (Usa el algoritmo nativo de búsqueda del reproductor)
-    function startSearch() {
-        const query = document.getElementById('search-input').value;
+    // El truco "Force Search": Usamos un proxy de sugerencias para obtener IDs reales
+    async function forceSearch() {
+        const query = document.getElementById('q').value;
         if(!query) return;
+        
+        const grid = document.getElementById('grid');
+        grid.innerHTML = "<p style='text-align:center; grid-column:1/-1;'>Conectando con YouTube...</p>";
 
-        const grid = document.getElementById('results-grid');
-        grid.innerHTML = "<p style='text-align: center; grid-column: 1/-1;'>Buscando...</p>";
-
-        // Cargamos la búsqueda directamente en el reproductor invisible
-        player.cuePlaylist({
-            listType: 'search',
-            list: query
-        });
-
-        // Extraemos la lista generada por el reproductor
+        // Usamos el endpoint de Google Suggest que suele ser más abierto
+        const script = document.createElement('script');
+        script.src = `https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=${encodeURIComponent(query)}&callback=handleSuggest`;
+        document.body.appendChild(script);
+        
+        // Mientras tanto, pedimos al reproductor que cargue una búsqueda para extraer datos
+        p.cuePlaylist({ listType: 'search', list: query });
+        
         setTimeout(() => {
-            const playlist = player.getPlaylist();
-            grid.innerHTML = "";
-            
-            if (playlist && playlist.length > 0) {
-                playlist.forEach((id, index) => {
-                    const card = document.createElement('div');
-                    card.className = 'video-card';
-                    card.onclick = () => {
-                        player.loadVideoById(id);
-                        if(!radioOn) toggleRadio();
-                    };
-                    card.innerHTML = `
-                        <img src="https://img.youtube.com/vi/${id}/mqdefault.jpg">
-                        <div class="video-card-info">
-                            <h4>Opción de YouTube #${index + 1}</h4>
-                            <p style="color:#888; font-size:11px; margin-top:5px;">Haz clic para iniciar la radio</p>
-                        </div>
-                    `;
-                    grid.appendChild(card);
-                });
-            } else {
-                grid.innerHTML = "<p style='text-align: center; grid-column: 1/-1;'>No se encontraron resultados. Intenta con otro término.</p>";
+            const list = p.getPlaylist();
+            if(!list) {
+                grid.innerHTML = "<p style='text-align:center; grid-column:1/-1; color:red;'>YouTube bloqueó la búsqueda rápida. <br>Prueba buscando el nombre exacto de la canción.</p>";
+                return;
             }
-        }, 1200);
+            grid.innerHTML = "";
+            list.slice(0, 10).forEach((id, i) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => { p.loadVideoById(id); if(!running) control(); };
+                card.innerHTML = `
+                    <img src="https://i.ytimg.com/vi/${id}/mqdefault.jpg">
+                    <div class="card-body">
+                        <h4>Opción Sugerida #${i+1}</h4>
+                        <p style="font-size:11px; color:var(--bytes); margin-top:5px;">Click para iniciar radio</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }, 1500);
     }
 
-    function toggleRadio() {
-        radioOn = !radioOn;
-        const btn = document.getElementById('power-btn');
-        if(radioOn) {
-            btn.innerText = "DETENER";
-            btn.style.background = "#333";
-            startMixer();
+    function handleSuggest(data) {
+        console.log("Sugerencias listas:", data[1]);
+    }
+
+    function control() {
+        running = !running;
+        const b = document.getElementById('master');
+        if(running) {
+            b.innerText = "DETENER"; b.style.background = "#222";
+            sec = 60;
+            t1 = setInterval(() => {
+                sec--; if(sec < 0) sec = 59;
+                document.getElementById('clock').innerText = `00:${sec < 10 ? '0'+sec : sec}`;
+            }, 1000);
+            t2 = setInterval(talk, 60000);
         } else {
-            btn.innerText = "INICIAR RADIO";
-            btn.style.background = "var(--yt-red)";
-            stopMixer();
+            b.innerText = "ENCENDER"; b.style.background = "#FF0000";
+            clearInterval(t1); clearInterval(t2); p.stopVideo(); window.speechSynthesis.cancel();
         }
     }
 
-    function startMixer() {
-        clearInterval(tTimer); clearInterval(tInterval);
-        timeLeft = 60;
-        tTimer = setInterval(() => {
-            timeLeft--;
-            if(timeLeft < 0) timeLeft = 59;
-            document.getElementById('timer-display').innerText = `00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`;
-        }, 1000);
-        tInterval = setInterval(speakNow, 60000);
-    }
-
-    function speakNow() {
-        const text = document.getElementById('tts-content').value;
-        const msg = new SpeechSynthesisUtterance(text);
-        msg.lang = 'es-MX';
-        player.setVolume(15);
-        msg.onend = () => { player.setVolume(100); timeLeft = 60; };
-        window.speechSynthesis.speak(msg);
-    }
-
-    function stopMixer() {
-        clearInterval(tTimer); clearInterval(tInterval);
-        player.stopVideo();
-        window.speechSynthesis.cancel();
+    function talk() {
+        const m = new SpeechSynthesisUtterance(document.getElementById('msg').value);
+        m.lang = 'es-MX';
+        p.setVolume(15);
+        m.onend = () => { p.setVolume(100); sec = 60; };
+        window.speechSynthesis.speak(m);
     }
 </script>
 
