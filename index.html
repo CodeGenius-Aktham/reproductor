@@ -890,15 +890,31 @@ function fmtTime(s) {
 }
 
 // ─── DUCK ────────────────────────────────────────────────
+let volumeInterval = null;
+
 function duckMusic(on) {
   isDucked = on;
   document.getElementById('duckBanner').style.display = on ? 'flex' : 'none';
-  
-  if (ytPlayer && ytReady) {
-    ytPlayer.setVolume(on ? Math.round(userVolume * 0.4) : userVolume);
-  }
-}
 
+  if (!ytPlayer || !ytReady) return;
+
+  const targetVolume = on ? Math.round(userVolume * 0.4) : userVolume;
+  let currentVolume = ytPlayer.getVolume();
+
+  clearInterval(volumeInterval);
+
+  volumeInterval = setInterval(() => {
+    if (on && currentVolume > targetVolume) {
+      currentVolume -= 2;
+    } else if (!on && currentVolume < targetVolume) {
+      currentVolume += 2;
+    } else {
+      clearInterval(volumeInterval);
+    }
+
+    ytPlayer.setVolume(currentVolume);
+  }, 30);
+}
 // ─── RESTO DEL CÓDIGO (SIN CAMBIOS IMPORTANTES) ──────────
 // ─── SEARCH / RESULTS ────────────────────────────────────
 async function ytSearch(query, maxResults = 15) {
