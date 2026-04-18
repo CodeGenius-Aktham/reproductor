@@ -898,22 +898,13 @@ function duckMusic(on) {
   if (!ytPlayer || !ytReady) return;
 
   if (on) {
-    // 🔥 Truco móvil: bajar volumen + forzar refresh
-    ytPlayer.setVolume(Math.round(userVolume * 0.4));
-
-    // 👇 Forzar aplicación real del volumen
+    // 🎙️ LOCUTOR HABLANDO → PAUSA
     ytPlayer.pauseVideo();
-    setTimeout(() => {
-      ytPlayer.playVideo();
-    }, 100);
-
   } else {
-    ytPlayer.setVolume(userVolume);
-
-    ytPlayer.pauseVideo();
-    setTimeout(() => {
+    // 🎵 LOCUTOR TERMINÓ → REANUDA
+    if (currentVideoId) {
       ytPlayer.playVideo();
-    }, 100);
+    }
   }
 }
 // ─── RESTO DEL CÓDIGO (SIN CAMBIOS IMPORTANTES) ──────────
