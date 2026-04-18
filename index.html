@@ -893,8 +893,9 @@ function fmtTime(s) {
 function duckMusic(on) {
   isDucked = on;
   document.getElementById('duckBanner').style.display = on ? 'flex' : 'none';
+  
   if (ytPlayer && ytReady) {
-    ytPlayer.setVolume(on ? Math.round(userVolume * 0.15) : userVolume);
+    ytPlayer.setVolume(on ? Math.round(userVolume * 0.4) : userVolume);
   }
 }
 
