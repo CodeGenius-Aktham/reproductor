@@ -891,29 +891,30 @@ function fmtTime(s) {
 
 // ─── DUCK ────────────────────────────────────────────────
 let volumeInterval = null;
-
 function duckMusic(on) {
   isDucked = on;
   document.getElementById('duckBanner').style.display = on ? 'flex' : 'none';
 
   if (!ytPlayer || !ytReady) return;
 
-  const targetVolume = on ? Math.round(userVolume * 0.4) : userVolume;
-  let currentVolume = ytPlayer.getVolume();
+  if (on) {
+    // 🔥 Truco móvil: bajar volumen + forzar refresh
+    ytPlayer.setVolume(Math.round(userVolume * 0.4));
 
-  clearInterval(volumeInterval);
+    // 👇 Forzar aplicación real del volumen
+    ytPlayer.pauseVideo();
+    setTimeout(() => {
+      ytPlayer.playVideo();
+    }, 100);
 
-  volumeInterval = setInterval(() => {
-    if (on && currentVolume > targetVolume) {
-      currentVolume -= 2;
-    } else if (!on && currentVolume < targetVolume) {
-      currentVolume += 2;
-    } else {
-      clearInterval(volumeInterval);
-    }
+  } else {
+    ytPlayer.setVolume(userVolume);
 
-    ytPlayer.setVolume(currentVolume);
-  }, 30);
+    ytPlayer.pauseVideo();
+    setTimeout(() => {
+      ytPlayer.playVideo();
+    }, 100);
+  }
 }
 // ─── RESTO DEL CÓDIGO (SIN CAMBIOS IMPORTANTES) ──────────
 // ─── SEARCH / RESULTS ────────────────────────────────────
